@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
+require('dotenv').config();  // برای بارگذاری متغیرهای محیطی
 
-const nextConfig: NextConfig = {
-  /* config options here */
+module.exports = {
+  env: {
+    GROQ_API_KEY: process.env.GROQ_API_KEY,
+  },
 };
-
-export default nextConfig;
