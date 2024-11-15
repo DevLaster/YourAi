@@ -4,8 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 const AIComponent: React.FC = () => {
   const [circleSize, setCircleSize] = useState(100);
-  const [userInput, setUserInput] = useState(''); // برای حذف این هشدار باید از آن استفاده کنید
-  const [aiResponse, setAiResponse] = useState(''); // برای حذف این هشدار باید از آن استفاده کنید
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // تابع برای دریافت پاسخ از ورودی کاربر
@@ -24,9 +22,9 @@ const AIComponent: React.FC = () => {
   };
 
   // تابع برای تبدیل پاسخ به صدا
-  const speakResponse = (response: string) => {
+  const speakResponse = useCallback((response: string) => {
     if (window.speechSynthesis) {
-      const utterance: SpeechSynthesisUtterance = new SpeechSynthesisUtterance(response);
+      const utterance = new SpeechSynthesisUtterance(response);
       utterance.lang = 'fa-IR';
       const voices = window.speechSynthesis.getVoices();
       utterance.voice = voices.find((voice) => voice.lang === 'fa-IR') || null;
@@ -45,21 +43,20 @@ const AIComponent: React.FC = () => {
     } else {
       console.error("SpeechSynthesis is not supported in this browser.");
     }
-  };
+  }, [isSpeaking]);
 
   // تابع برای شروع گوش دادن به صحبت‌های کاربر
   const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
-      const recognition: SpeechRecognition = new SpeechRecognition();
+      const recognition = new SpeechRecognition();
       recognition.lang = 'fa-IR';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
-      recognition.onresult = async (event: SpeechRecognitionEvent) => {
+      recognition.onresult = async (event: any) => {
         const transcript = event.results[0][0].transcript;
-        setUserInput(transcript);
 
         // بررسی کلمه "youtube"
         if (transcript.toLowerCase().includes("youtube")) {
@@ -68,13 +65,12 @@ const AIComponent: React.FC = () => {
         }
 
         const response = getResponse(transcript);
-        setAiResponse(response);
         speakResponse(response);
         setCircleSize(150);
         setTimeout(() => setCircleSize(100), 1000);
       };
 
-      recognition.onerror = (event: SpeechRecognitionError) => {
+      recognition.onerror = (event: any) => {
         console.error("Error occurred in speech recognition: ", event.error);
       };
 
@@ -82,7 +78,7 @@ const AIComponent: React.FC = () => {
     } else {
       console.error("SpeechRecognition is not supported in this browser.");
     }
-  }, [speakResponse]); // افزودن speakResponse به وابستگی‌ها
+  }, [speakResponse]);
 
   // useEffect برای شروع گوش دادن به صحبت‌های کاربر هنگام بارگذاری صفحه
   useEffect(() => {
