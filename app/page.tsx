@@ -47,7 +47,9 @@ const AIComponent: React.FC = () => {
 
   // تابع برای شروع گوش دادن به صحبت‌های کاربر
   const startListening = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as unknown as { SpeechRecognition: typeof window.SpeechRecognition }).SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition: typeof window.webkitSpeechRecognition }).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -55,7 +57,7 @@ const AIComponent: React.FC = () => {
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
-      recognition.onresult = async (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
 
         // بررسی کلمه "youtube"
@@ -70,7 +72,7 @@ const AIComponent: React.FC = () => {
         setTimeout(() => setCircleSize(100), 1000);
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Error occurred in speech recognition: ", event.error);
       };
 
