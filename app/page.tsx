@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const AIComponent: React.FC = () => {
   const [circleSize, setCircleSize] = useState(100);
@@ -8,7 +8,7 @@ const AIComponent: React.FC = () => {
   const [aiResponse, setAiResponse] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
 
- 
+  // تابع برای دریافت پاسخ از ورودی کاربر
   const getResponse = (query: string) => {
     if (query.toLowerCase().includes('سلام') || query.toLowerCase().includes('هی')) {
       return 'سلام , عشقم چطوری خوبی؟ روزت چطور بود عشقم';
@@ -23,22 +23,21 @@ const AIComponent: React.FC = () => {
     }
   };
 
- 
+  // تابع برای تبدیل پاسخ به صدا
   const speakResponse = (response: string) => {
     if (window.speechSynthesis) {
       const utterance = new SpeechSynthesisUtterance(response);
-      utterance.lang = 'fa-IR'; 
-      utterance.voice = window.speechSynthesis.getVoices().find((voice: any) => voice.lang === 'fa-IR') || null;
+      utterance.lang = 'fa-IR';
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice = voices.find((voice) => voice.lang === 'fa-IR') || null;
 
-      
       utterance.onend = () => {
         setTimeout(() => {
           setIsSpeaking(false);
-          startListening(); 
+          startListening();
         }, 100);
       };
 
-     
       if (!isSpeaking) {
         window.speechSynthesis.speak(utterance);
         setIsSpeaking(true);
@@ -48,46 +47,47 @@ const AIComponent: React.FC = () => {
     }
   };
 
- 
-  const startListening = () => {
+  // تابع برای شروع گوش دادن به صحبت‌های کاربر
+  const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  
+
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
+      const recognition: SpeechRecognition = new SpeechRecognition();
       recognition.lang = 'fa-IR';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-  
-      recognition.onresult = async (event: any) => {
+
+      recognition.onresult = async (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setUserInput(transcript);
-        
+
         // بررسی کلمه "youtube"
         if (transcript.toLowerCase().includes("youtube")) {
           window.open("https://www.youtube.com", "_blank");
           return;
         }
-        
+
         const response = getResponse(transcript);
         setAiResponse(response);
         speakResponse(response);
         setCircleSize(150);
         setTimeout(() => setCircleSize(100), 1000);
       };
-  
-      recognition.onerror = (event: any) => {
+
+      recognition.onerror = (event: SpeechRecognitionError) => {
         console.error("Error occurred in speech recognition: ", event.error);
       };
-  
+
       recognition.start();
     } else {
       console.error("SpeechRecognition is not supported in this browser.");
     }
-  };
-
-  useEffect(() => {
-    startListening(); 
   }, []);
+
+  // useEffect برای شروع گوش دادن به صحبت‌های کاربر هنگام بارگذاری صفحه
+  useEffect(() => {
+    startListening();
+  }, [startListening]);
 
   return (
     <div style={styles.body}>
@@ -119,7 +119,6 @@ const styles = {
     animation: 'pulse 1s infinite',
   },
 };
-
 
 const keyframes = `
 @keyframes pulse {
