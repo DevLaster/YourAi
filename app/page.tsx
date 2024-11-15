@@ -32,7 +32,7 @@ const AIComponent: React.FC = () => {
       utterance.onend = () => {
         setTimeout(() => {
           setIsSpeaking(false);
-          startListening();
+          startListening(); // فراخوانی دوباره تابع گوش دادن
         }, 100);
       };
 
@@ -47,9 +47,9 @@ const AIComponent: React.FC = () => {
 
   // تابع برای شروع گوش دادن به صحبت‌های کاربر
   const startListening = useCallback(() => {
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition: typeof window.SpeechRecognition }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition: typeof window.webkitSpeechRecognition }).webkitSpeechRecognition;
+    const SpeechRecognition = 
+      (window as any).SpeechRecognition || 
+      (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
@@ -80,11 +80,11 @@ const AIComponent: React.FC = () => {
     } else {
       console.error("SpeechRecognition is not supported in this browser.");
     }
-  }, [speakResponse]);
+  }, [speakResponse]); // اضافه کردن speakResponse به وابستگی‌ها
 
   // useEffect برای شروع گوش دادن به صحبت‌های کاربر هنگام بارگذاری صفحه
   useEffect(() => {
-    startListening();
+    startListening(); // تابع شروع گوش دادن
   }, [startListening]);
 
   return (
