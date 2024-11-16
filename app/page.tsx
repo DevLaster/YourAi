@@ -6,7 +6,7 @@ const AIComponent: React.FC = () => {
   const [circleSize, setCircleSize] = useState(100);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Function to get a response based on the user's query
+  // تابع برای دریافت پاسخ از ورودی کاربر
   const getResponse = (query: string): string => {
     if (query.toLowerCase().includes('سلام') || query.toLowerCase().includes('هی')) {
       return 'سلام , عشقم چطوری خوبی؟ روزت چطور بود عشقم';
@@ -21,7 +21,7 @@ const AIComponent: React.FC = () => {
     }
   };
 
-  // Function to speak a response
+  // تابع برای تبدیل پاسخ به صدا
   const speakResponse = useCallback(
     (response: string) => {
       if (window.speechSynthesis) {
@@ -33,7 +33,7 @@ const AIComponent: React.FC = () => {
         utterance.onend = () => {
           setTimeout(() => {
             setIsSpeaking(false);
-            startListening(); // Restart listening after speaking
+            startListening(); // فراخوانی دوباره تابع گوش دادن
           }, 100);
         };
 
@@ -45,17 +45,19 @@ const AIComponent: React.FC = () => {
         console.error('SpeechSynthesis is not supported in this browser.');
       }
     },
-    [isSpeaking] // Add isSpeaking as a dependency
+    [isSpeaking, startListening] // اضافه کردن وابستگی صحیح
   );
 
-  // Function to start listening to user input
+  // تابع برای شروع گوش دادن به صحبت‌های کاربر
   const startListening = useCallback(() => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      (window as unknown as { SpeechRecognition: typeof SpeechRecognition; webkitSpeechRecognition: typeof SpeechRecognition })
+        .SpeechRecognition ||
+      (window as unknown as { SpeechRecognition: typeof SpeechRecognition; webkitSpeechRecognition: typeof SpeechRecognition })
+        .webkitSpeechRecognition;
 
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition() as SpeechRecognition;
+      const recognition = new SpeechRecognition();
       recognition.lang = 'fa-IR';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
@@ -82,10 +84,10 @@ const AIComponent: React.FC = () => {
     } else {
       console.error('SpeechRecognition is not supported in this browser.');
     }
-  }, [speakResponse]); // Add speakResponse as a dependency
+  }, [speakResponse]);
 
   useEffect(() => {
-    startListening(); // Start listening when the component mounts
+    startListening(); // تابع شروع گوش دادن
   }, [startListening]);
 
   return (
