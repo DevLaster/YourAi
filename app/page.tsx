@@ -6,8 +6,8 @@ const AIComponent: React.FC = () => {
   const [circleSize, setCircleSize] = useState(100);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // تابع برای دریافت پاسخ از ورودی کاربر
-  const getResponse = (query: string) => {
+  // Function to get a response based on the user's query
+  const getResponse = (query: string): string => {
     if (query.toLowerCase().includes('سلام') || query.toLowerCase().includes('هی')) {
       return 'سلام , عشقم چطوری خوبی؟ روزت چطور بود عشقم';
     } else if (query.toLowerCase().includes('چطوری')) {
@@ -21,38 +21,41 @@ const AIComponent: React.FC = () => {
     }
   };
 
-  // تابع برای تبدیل پاسخ به صدا
-  const speakResponse = useCallback((response: string) => {
-    if (window.speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance(response);
-      utterance.lang = 'fa-IR';
-      const voices = window.speechSynthesis.getVoices();
-      utterance.voice = voices.find((voice) => voice.lang === 'fa-IR') || null;
+  // Function to speak a response
+  const speakResponse = useCallback(
+    (response: string) => {
+      if (window.speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(response);
+        utterance.lang = 'fa-IR';
+        const voices = window.speechSynthesis.getVoices();
+        utterance.voice = voices.find((voice) => voice.lang === 'fa-IR') || null;
 
-      utterance.onend = () => {
-        setTimeout(() => {
-          setIsSpeaking(false);
-          startListening(); // فراخوانی دوباره تابع گوش دادن
-        }, 100);
-      };
+        utterance.onend = () => {
+          setTimeout(() => {
+            setIsSpeaking(false);
+            startListening(); // Restart listening after speaking
+          }, 100);
+        };
 
-      if (!isSpeaking) {
-        window.speechSynthesis.speak(utterance);
-        setIsSpeaking(true);
+        if (!isSpeaking) {
+          window.speechSynthesis.speak(utterance);
+          setIsSpeaking(true);
+        }
+      } else {
+        console.error('SpeechSynthesis is not supported in this browser.');
       }
-    } else {
-      console.error("SpeechSynthesis is not supported in this browser.");
-    }
-  }, [isSpeaking]);
+    },
+    [isSpeaking] // Add isSpeaking as a dependency
+  );
 
-  // تابع برای شروع گوش دادن به صحبت‌های کاربر
+  // Function to start listening to user input
   const startListening = useCallback(() => {
-    const SpeechRecognition = 
-      (window as any).SpeechRecognition || 
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognition() as SpeechRecognition;
       recognition.lang = 'fa-IR';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
@@ -60,9 +63,8 @@ const AIComponent: React.FC = () => {
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
 
-        // بررسی کلمه "youtube"
-        if (transcript.toLowerCase().includes("youtube")) {
-          window.open("https://www.youtube.com", "_blank");
+        if (transcript.toLowerCase().includes('youtube')) {
+          window.open('https://www.youtube.com', '_blank');
           return;
         }
 
@@ -73,18 +75,17 @@ const AIComponent: React.FC = () => {
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Error occurred in speech recognition: ", event.error);
+        console.error('Error occurred in speech recognition: ', event.error);
       };
 
       recognition.start();
     } else {
-      console.error("SpeechRecognition is not supported in this browser.");
+      console.error('SpeechRecognition is not supported in this browser.');
     }
-  }, [speakResponse]); // اضافه کردن speakResponse به وابستگی‌ها
+  }, [speakResponse]); // Add speakResponse as a dependency
 
-  // useEffect برای شروع گوش دادن به صحبت‌های کاربر هنگام بارگذاری صفحه
   useEffect(() => {
-    startListening(); // تابع شروع گوش دادن
+    startListening(); // Start listening when the component mounts
   }, [startListening]);
 
   return (
@@ -131,8 +132,10 @@ const keyframes = `
   }
 }`;
 
-const styleElement = document.createElement('style');
-styleElement.innerHTML = keyframes;
-document.head.appendChild(styleElement);
+if (typeof window !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.innerHTML = keyframes;
+  document.head.appendChild(styleElement);
+}
 
 export default AIComponent;
